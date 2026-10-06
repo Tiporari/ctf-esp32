@@ -1,10 +1,10 @@
 # Edit these, then push with: .\deploy.ps1
 SSID = "CTF-Lab-7f3a"        # hidden, so it won't appear in a normal Wi-Fi list
-PASSWORD = "changeme123"     # WPA2 needs 8+ chars; set to "" for an open network
+PASSWORD = "cardputer"     # WPA2 needs 8+ chars; set to "" for an open network
 CHANNEL = 6
 HIDDEN = True
 MAX_CLIENTS = 4
-AP_IP = "192.168.4.1"
+AP_IP = "192.168.0.1"
 
 LOGIN_USER = "admin"
 LOGIN_PASS = "password"

@@ -52,7 +52,8 @@ Edit [`device/config.py`](device/config.py), then re-run `.\deploy.ps1`:
 | Setting | What it does |
 |---|---|
 | `SSID` | Hidden network name. Pick something that won't be guessed. |
-| `PASSWORD` | WPA2 password (8+ characters). **Change the default**. Empty string = open network. |
+| `PASSWORD` | WPA2 password (8+ characters). Empty string = open network. |
+| `AP_IP` | The board's address, where the player browses once connected. Update if you change it. |
 | `HIDDEN` | `True` hides the name from normal Wi-Fi lists. |
 | `LOGIN_USER` / `LOGIN_PASS` | Default is `admin` / `password` (the lesson: default credentials are the most common security mistake). |
 | `MORSE_KEY` | The message played in Level 2. |
@@ -73,7 +74,7 @@ The ESP32 has **no internet**. While the phone/laptop is on the CTF network it c
 ## Walkthrough (spoilers!)
 
 ### Level 0 — Find the network
-The SSID is hidden, so it won't appear in a Wi-Fi list. He has to add it manually: Wi-Fi settings → *Add network / Other* → type the exact name → WPA2 → password. Then open <http://192.168.4.1> (plain `http`, not `https`).
+The SSID is hidden, so it won't appear in a Wi-Fi list. He has to add it manually: Wi-Fi settings → *Add network / Other* → type the exact name → WPA2 → password. Then open the board's address, **`AP_IP` in `device/config.py`** (currently <http://192.168.0.1>; plain `http`, not `https`).
 
 How does he learn the name? That's up to you: a clue card, a sticky note, a scanner app that shows hidden networks (e.g. a Wi-Fi analyzer), or for older kids a laptop sniffing tool. Hidden SSIDs are *not real security*; they're a fun first puzzle.
 
@@ -116,11 +117,12 @@ How does he learn the name? That's up to you: a clue card, a sticky note, a scan
 
 | Problem | Fix |
 |---|---|
+| `deploy.ps1 cannot be loaded ... not digitally signed` | Windows blocks scripts by default. Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once (no admin needed), or run it one time with `powershell -ExecutionPolicy Bypass -File .\deploy.ps1`. |
 | Can't see the COM port | Install the CP210x driver; try a different USB *data* cable (some are charge-only). |
 | esptool can't connect | Hold BOOT while connecting; close any serial monitor using the port. |
 | Network not found after power-up | Wait ~10 s. Check SSID/password spelling in `config.py`. Phones sometimes need Wi-Fi toggled off and on. |
 | Phone says "no internet" / disconnects | Expected. Choose "stay connected". The board has no internet. |
-| Page won't load | Use `http://192.168.4.1` and not `https`. Turn off mobile data or VPN on the phone. |
+| Page won't load | Use `http://` plus the `AP_IP` from `config.py` (currently `192.168.0.1`), not `https`. Turn off mobile data or VPN on the phone. |
 | No sound on `/radio` | Tap **Play** (browsers require a tap first), unmute, check volume. |
 | Want to see what the board is doing | `.\.venv\Scripts\mpremote connect COM7` opens a serial console. Note that this interrupts the server; press the board's reset button or run `.\deploy.ps1` to restart. |
 | Want to restart the game / reset | Unplug and replug power. There is no stored progress. |
