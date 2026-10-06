@@ -10,7 +10,7 @@ input,textarea,button{{background:#16202b;color:#39ff14;border:1px solid #39ff14
 textarea{{width:100%;box-sizing:border-box}}.err{{color:#ff4136}}hr{{border-color:#1f3a1f;margin-top:2.5em}}</style></head>
 <body>{body}
 <hr><form method="POST" action="/submit"><label>Got a flag? </label>
-<input name="flag" placeholder="FLAG{{...}}" size="30"><button>Submit</button></form></body></html>"""
+<input name="flag" placeholder="FLAG{{...}}" size="30" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false"><button>Submit</button></form></body></html>"""
 
 LOGIN = """<h1>&gt; Lab Console</h1><p>Authorized users only.</p>
 <!-- TODO: remove test account before launch -->
@@ -18,6 +18,14 @@ LOGIN = """<h1>&gt; Lab Console</h1><p>Authorized users only.</p>
 <input name="user" placeholder="username" autocomplete="off"><br>
 <input name="pass" type="password" placeholder="password"><br>
 <button>Log in</button></form>%s"""
+
+
+def norm(s):
+    """Forgiving flag compare: ignore case/whitespace and the optional FLAG{...} wrapper."""
+    s = "".join(s.lower().split())
+    if s.startswith("flag{") and s.endswith("}"):
+        s = s[5:-1]
+    return s
 
 
 def _vault_b64():
@@ -52,9 +60,9 @@ def register(srv):
 
     @srv.route("/submit", methods=("POST",))
     def submit(req):
-        flag = req.form().get("flag", "").strip()
+        flag = norm(req.form().get("flag", ""))
         for i, lvl in enumerate(config.LEVELS):
-            if flag == lvl["flag"]:
+            if flag == norm(lvl["flag"]):
                 return page("<h1>&gt; Correct!</h1><p>%s</p>" % lvl["next"], title="Correct",
                             headers={"Set-Cookie": "lvl=%d; Path=/" % (i + 2)})
         return page('<h1 class="err">&gt; Nope.</h1><p>That is not a flag. <a href="javascript:history.back()">Try again</a></p>',
