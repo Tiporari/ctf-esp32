@@ -1,0 +1,75 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radio</title>
+<style>
+body{background:#0b0f14;color:#39ff14;font-family:monospace;max-width:42em;margin:3em auto;padding:0 1em}
+input,select,button{background:#16202b;color:#39ff14;border:1px solid #39ff14;font-family:monospace;padding:6px;margin:4px 0}
+button{cursor:pointer}.err{color:#ff4136}
+#lamp{display:inline-block;width:18px;height:18px;border-radius:50%;background:#16202b;border:1px solid #39ff14;vertical-align:middle;margin-left:8px}
+#lamp.on{background:#39ff14;box-shadow:0 0 12px #39ff14}
+.chart{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5em,1fr));gap:2px 12px;margin:1em 0}
+.chart b{display:inline-block;width:1.5em}
+hr{border-color:#1f3a1f;margin:2em 0}
+</style></head><body>
+<h1>&gt; Incoming transmission</h1>
+<p>A signal is coming through. Listen carefully.</p>
+<p>
+<button id="play">&#9654; Play</button>
+<select id="spd">
+<option value="5">Slow</option>
+<option value="3">Very slow</option>
+<option value="8">Medium</option>
+</select>
+<span id="lamp"></span>
+</p>
+%MSG%
+<form method="POST" action="/radio">
+<label>What did you hear?</label><br>
+<input name="answer" autocomplete="off" size="30">
+<button>Submit answer</button>
+</form>
+<hr>
+<h3>Morse code reference</h3>
+<div class="chart">%CHART%</div>
+<script>
+const M = "%MORSE%";
+const CHAR_WPM = 12;
+const lamp = document.getElementById("lamp");
+let ctx = null, timers = [];
+function stop(){ timers.forEach(clearTimeout); timers = []; lamp.classList.remove("on"); if (ctx) { ctx.close(); ctx = null; } }
+function play(){
+  stop();
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const eff = +document.getElementById("spd").value;
+  const u = 1.2 / CHAR_WPM;
+  const f = (60 * CHAR_WPM - 37.2 * eff) / (19 * eff * CHAR_WPM);
+  let t = ctx.currentTime + 0.5;
+  const t0 = t;
+  const tone = (start, dur) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = 600;
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(0.4, start + 0.005);
+    g.gain.setValueAtTime(0.4, start + dur - 0.005);
+    g.gain.linearRampToValueAtTime(0, start + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(start); o.stop(start + dur);
+    timers.push(setTimeout(() => lamp.classList.add("on"), (start - t0 + 0.5) * 1000));
+    timers.push(setTimeout(() => lamp.classList.remove("on"), (start - t0 + 0.5 + dur) * 1000));
+  };
+  const words = M.split(" / ");
+  words.forEach((w, wi) => {
+    w.split(" ").forEach((ch, ci) => {
+      for (let i = 0; i < ch.length; i++) {
+        const d = (ch[i] === "." ? 1 : 3) * u;
+        tone(t, d);
+        t += d + (i < ch.length - 1 ? u : 0);
+      }
+      if (ci < w.split(" ").length - 1) t += 3 * f;
+    });
+    if (wi < words.length - 1) t += 7 * f;
+  });
+}
+document.getElementById("play").onclick = play;
+</script>
+</body></html>
