@@ -1,8 +1,8 @@
 # Edit these, then push with: .\deploy.ps1
-SSID = "CTF-Lab-7f3a"        # hidden, so it won't appear in a normal Wi-Fi list
+SSID = "CTF-Lab-7f3a"        # visible in the Wi-Fi list (see HIDDEN)
 PASSWORD = "cardputer"     # WPA2 needs 8+ chars; set to "" for an open network
 CHANNEL = 6
-HIDDEN = True
+HIDDEN = False               # some Android versions can't join hidden networks
 MAX_CLIENTS = 4
 AP_IP = "192.168.0.1"
 

@@ -1,6 +1,6 @@
-# ESP32 Hidden-Network CTF — Parents' Guide
+# ESP32 Wi-Fi CTF — Parents' Guide
 
-A short, self-contained capture-the-flag game for a curious kid (built for a 12-year-old), run entirely from a ~$10 ESP32 board. The board broadcasts its own **hidden Wi-Fi network** and hosts a small web server. There is no internet involved and nothing on your home network is touched.
+A short, self-contained capture-the-flag game for a curious kid (built for a 12-year-old), run entirely from a ~$10 ESP32 board. The board broadcasts its own **password-protected Wi-Fi network** (it can also hide it) and hosts a small web server. There is no internet involved and nothing on your home network is touched.
 
 > **Spoiler warning:** this guide contains every answer. Keep it away from the player. That's why this repo is private.
 
@@ -8,7 +8,7 @@ A short, self-contained capture-the-flag game for a curious kid (built for a 12-
 
 | Level | Task | Skill practiced | Flag |
 |---|---|---|---|
-| 0 | Find and join a Wi-Fi network that doesn't show up in the list | How Wi-Fi works, hidden SSIDs | *(no flag, reaching the login page is the goal)* |
+| 0 | Find the mystery Wi-Fi network and guess its password from a clue | Wi-Fi basics, password guessing | *(no flag, reaching the login page is the goal)* |
 | 1 | Log in to the "Lab Console", then turn a wall of text into an image | Default passwords, Base64, file signatures | `FLAG{b64_decoded_nice_work}` |
 | 2 | Listen to a Morse message on `/radio` and type what you hear | Morse code, patience | `FLAG{dits_and_dahs_decoded}` |
 
@@ -51,10 +51,10 @@ Edit [`device/config.py`](device/config.py), then re-run `.\deploy.ps1`:
 
 | Setting | What it does |
 |---|---|
-| `SSID` | Hidden network name. Pick something that won't be guessed. |
+| `SSID` | Network name shown in the Wi-Fi list. |
 | `PASSWORD` | WPA2 password (8+ characters). Empty string = open network. |
 | `AP_IP` | The board's address, where the player browses once connected. Update if you change it. |
-| `HIDDEN` | `True` hides the name from normal Wi-Fi lists. |
+| `HIDDEN` | `False` (default here): the network is visible. `True` hides it, but some Android versions can't join hidden networks. |
 | `LOGIN_USER` / `LOGIN_PASS` | Default is `admin` / `password` (the lesson: default credentials are the most common security mistake). |
 | `MORSE_KEY` | The message played in Level 2. |
 | `LEVELS` | Flags and the success messages. |
@@ -65,18 +65,19 @@ To change the Level 1 image: `python tools/make_image.py "FLAG{your_flag}" vault
 
 Give the player only:
 
-- The name of the game / a story hook ("There's a secret network somewhere in the house...").
-- The **hint that a hidden network exists.**
-- The **Wi-Fi password** (decide whether it's part of the puzzle: a note somewhere, or just hand it over. The hidden-name part is already challenging).
+- The name of the game / a story hook ("There's a strange new Wi-Fi network in the house...").
+- A **clue to the Wi-Fi password** (the password is the first puzzle).
 
 The ESP32 has **no internet**. While the phone/laptop is on the CTF network it can't reach websites. For Level 1 he'll need a way to decode Base64 offline (see hints), or he can copy the text, switch back to home Wi-Fi, decode it online, then rejoin. Letting him figure that out is part of the fun.
 
 ## Walkthrough (spoilers!)
 
 ### Level 0 — Find the network
-The SSID is hidden, so it won't appear in a Wi-Fi list. He has to add it manually: Wi-Fi settings → *Add network / Other* → type the exact name → WPA2 → password. Then open the board's address, **`AP_IP` in `device/config.py`** (currently <http://192.168.0.1>; plain `http`, not `https`).
+The network `CTF-Lab-7f3a` is **visible** in the normal Wi-Fi list but protected by a WPA2 password he has to **figure out from your clue**. The password is **`cardputer`** (`PASSWORD` in `config.py`). Once connected, he opens the board's address, **`AP_IP` in `device/config.py`** (currently <http://192.168.0.1>; plain `http`, not `https`).
 
-How does he learn the name? That's up to you: a clue card, a sticky note, a scanner app that shows hidden networks (e.g. a Wi-Fi analyzer), or for older kids a laptop sniffing tool. Hidden SSIDs are *not real security*; they're a fun first puzzle.
+The clue is up to you: a sticky note, a riddle, or a hint about the gadget he's been wanting. Guessing a password from context is how many real accounts get compromised, so it's a good lesson on why passwords shouldn't be personal.
+
+> **Why isn't the network hidden?** The board *can* hide it (`HIDDEN = True` in `config.py`), but many Android versions have no "connect to hidden network" option, and iPhones need extra steps. A visible network with a guessable password is more reliable and a better puzzle. Hidden SSIDs are not real security anyway.
 
 ### Level 1 — Fake login + Base64 image
 - The login page accepts **`admin` / `password`**. Lesson: default or weak passwords are the #1 real-world weakness.
@@ -96,8 +97,9 @@ How does he learn the name? That's up to you: a clue card, a sticky note, a scan
 ## Hint ladder (so you can help without spoiling)
 
 **Can't find / join the network**
-1. "Wi-Fi names don't have to be broadcast. What if you had to type in the name yourself?"
-2. "Where would someone leave the name?" (point to your clue card)
+1. "Look through the Wi-Fi list for a network that doesn't belong to anyone you know."
+2. "Passwords are often something the owner likes or uses every day. What's on the clue card telling you?"
+3. Give the first letter, or the category (it's a gadget in this house).
 
 **Stuck on the login**
 1. "Think about what the laziest, most common username and password would be."
@@ -131,14 +133,14 @@ How does he learn the name? That's up to you: a clue card, a sticky note, a scan
 
 - The board only creates its own tiny network (up to 4 devices). It does not connect to your home Wi-Fi or the internet and can't expose anything on them.
 - The "login" is a fake page that only checks against the values in `config.py`. No real accounts are involved.
-- Hidden network names and Base64 are **not** security measures. Use the game as a springboard: talk about why real systems use strong passwords, encryption (not just encoding), and how defenders find hidden things.
+- Guessable passwords and Base64 are **not** security measures. Use the game as a springboard: talk about why real systems use strong passwords, encryption (not just encoding), and how defenders find hidden things.
 - Only point these techniques at devices you own or have permission to test. That's the first rule of every real CTF.
 
 ## Repo layout
 
 ```
 device/          # files that run on the ESP32 (MicroPython)
-  main.py        # starts the hidden access point + web server
+  main.py        # starts the Wi-Fi access point + web server
   config.py      # SSID, password, flags, Morse message — edit this
   challenges.py  # all routes / levels
   webserver.py   # tiny asyncio HTTP server
